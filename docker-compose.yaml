@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_security
+    environment:
+      - POSTGRES_USER=sol
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=security_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_security:/var/lib/postgresql/data
+
+volumes:
+  postgres_security:
