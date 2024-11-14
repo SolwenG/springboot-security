@@ -1,27 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Create Task</title>
+    <title>Créer une nouvelle tâche</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<h1>Modifier une tache</h1>
-<form action="/tasks" method="post">
-    <label for="title">Titre :</label>
-    <input type="text" id="title" name="title" required><br>
+<div class="container mt-5">
+    <h1 class="mb-4">Créer une nouvelle tâche</h1>
+    <form th:action="@{/tasks/edit/{id}(id=${task.id})}" th:object="${task}" method="post">
+        <div class="form-group">
+            <label for="title">Titre :</label>
+            <input type="text" th:field="*{title}" id="title" name="title" class="form-control" required>
+        </div>
 
-    <label for="description">Description :</label>
-    <textarea id="description" name="description" required></textarea><br>
+        <div class="form-group">
+            <label for="description">Description :</label>
+            <textarea th:field="*{description}" id="description" name="description" class="form-control"
+                      required></textarea>
+        </div>
 
-    <label for="status">Statut :</label>
-    <select id="status" name="status" required>
-        <option value="A_FAIRE">À Faire</option>
-        <option value="EN_COURS">En Cours</option>
-        <option value="TERMINE">Terminé</option>
-    </select><br>
+        <div class="form-group">
+            <label for="status">Statut :</label>
+            <select id="status" th:field="*{status}" name="status" class="form-control" required>
+                <option value="A_FAIRE">À Faire</option>
+                <option value="EN_COURS">En Cours</option>
+                <option value="TERMINE">Terminé</option>
+            </select>
+        </div>
 
-    <button type="submit">Enregistrer</button>
-</form>
+        <div class="form-group mt-5">
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+            <a href="/tasks" class="btn btn-secondary">Retour</a>
+        </div>
+    </form>
+</div>
 </body>
 </html>

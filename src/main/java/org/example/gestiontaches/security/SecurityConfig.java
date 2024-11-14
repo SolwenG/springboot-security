@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,6 +15,7 @@ import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.sql.DataSource;
+import java.util.Set;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -32,7 +34,14 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(exception -> exception.accessDeniedPage("/accessDenied"))
                 .formLogin(form -> form
-                        .defaultSuccessUrl("/tasks", true)
+                        .successHandler((request, response, authentication) -> {
+                            Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
+                            if (roles.contains("ROLE_ADMIN")) {
+                                response.sendRedirect("/admin/tasks");
+                            } else {
+                                response.sendRedirect("/tasks");
+                            }
+                        })
                         .permitAll()
                 )
                 .httpBasic(withDefaults());

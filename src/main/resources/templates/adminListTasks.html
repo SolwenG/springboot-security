@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="eng">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Liste des taches</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css"
+          rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <div class="mt-5">
+        <h1 class="text-center mt-3">Liste des taches</h1>
+        <ul class="list-group mt-3">
+            <li class="list-group-item d-flex justify-content-between align-items-center" th:each="task : ${tasks}">
+                <div>
+                    <h4 th:text="${task.userId.username}"></h4>
+                    <h6 th:text="${task.title}"></h6>
+                    <p th:text="${task.description}"></p>
+                    <p th:text="${task.status}"></p>
+                </div>
+                <div>
+                    <a th:href="@{/tasks/edit/{id}(id=${task.id})}">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a th:href="@{/admin/tasks/delete/{id}(id=${task.id})}">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>
