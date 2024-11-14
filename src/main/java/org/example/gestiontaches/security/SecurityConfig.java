@@ -3,9 +3,9 @@ package org.example.gestiontaches.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,6 +19,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -32,19 +33,6 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.accessDeniedPage("/accessDenied"))
                 .formLogin(form -> form
                         .defaultSuccessUrl("/tasks", true)
-                        .successHandler((request, response, authentication) -> {
-                            String role = authentication.getAuthorities().stream()
-                                    .map(GrantedAuthority::getAuthority)
-                                    .filter(auth -> auth.equals("ROLE_ADMIN"))
-                                    .findFirst()
-                                    .orElse("ROLE_USER");
-
-                            if ("ROLE_ADMIN".equals(role)) {
-                                response.sendRedirect("/admin/tasks");
-                            } else {
-                                response.sendRedirect("/tasks");
-                            }
-                        })
                         .permitAll()
                 )
                 .httpBasic(withDefaults());
@@ -64,8 +52,14 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService() throws UsernameNotFoundException {
         JdbcUserDetailsManager userDetailsService = new JdbcUserDetailsManager(dataSource);
         userDetailsService.setUsersByUsernameQuery("SELECT username, password, enabled FROM users WHERE username = ?");
-        userDetailsService.setAuthoritiesByUsernameQuery("SELECT username, role FROM users WHERE username = ?");
+        userDetailsService.setAuthoritiesByUsernameQuery(
+                "SELECT username, " +
+                "CASE role " +
+                "WHEN 0 THEN 'ROLE_USER' " +
+                "WHEN 1 THEN 'ROLE_ADMIN' " +
+                "END AS role " +
+                "FROM users " +
+                "WHERE username = ?");
         return userDetailsService;
     }
 }
-

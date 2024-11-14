@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
 @Controller
-@RequestMapping("/tasks")
 public class TaskController {
 
     private final TaskService taskService;
@@ -28,7 +26,15 @@ public class TaskController {
         this.userService = userService;
     }
 
-    @GetMapping
+    // FIND ALL POUR ADMIN
+    @Secured("ROLE_ADMIN")
+    @GetMapping("/admin/tasks")
+    public ResponseEntity<List<Task>> getAllTasks() {
+        return ResponseEntity.ok(taskService.findAllTasks());
+    }
+
+    // FIND ALL POUR USER
+    @GetMapping("/tasks")
     public ResponseEntity<List<Task>> getUserTasks() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
@@ -41,25 +47,8 @@ public class TaskController {
         return ResponseEntity.status(403).build();
     }
 
-    @GetMapping("/all")
-    @Secured("ROLE_ADMIN")
-    public ResponseEntity<List<Task>> getAllTasks() {
-        return ResponseEntity.ok(taskService.findAllTasks());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        Task task = taskService.findTaskById(id);
-
-        if (task != null && (task.getUserId().getUsername().equals(username) || isAdmin(authentication))) {
-            return ResponseEntity.ok(task);
-        }
-        return ResponseEntity.status(403).build();
-    }
-
-    @PostMapping
+    // CREATE
+    @PostMapping("/tasks")
     public ResponseEntity<Task> createTask(@RequestBody Task task) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
@@ -67,42 +56,45 @@ public class TaskController {
 
         if (user != null) {
             task.setUserId(user);
-            task.setStatus(task.getStatus() != null ? task.getStatus() : Task.Status.A_FAIRE); // Default if status isn't provided
+            task.setStatus(task.getStatus() != null ? task.getStatus() : Task.Status.A_FAIRE);
             return ResponseEntity.ok(taskService.createTask(task));
         }
         return ResponseEntity.status(403).build();
     }
 
-    @GetMapping("/create")
+    // CREATE VUE
+    @GetMapping("/tasks/create")
     public String showCreateTaskForm() {
         return "createTask";
     }
 
-    @PutMapping("/{id}")
+    // UPDATE FOR ADMIN OR USER
+    @PutMapping("/tasks/{id}")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
         Task existingTask = taskService.findTaskById(id);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        if (existingTask != null && (existingTask.getUserId().getUsername().equals(username) || isAdmin(authentication))) {
+        if (existingTask != null &&
+                (existingTask.getUserId().getUsername().equals(username) || isAdmin(authentication))) {
             existingTask.setTitle(updatedTask.getTitle());
             existingTask.setDescription(updatedTask.getDescription());
+            existingTask.setStatus(updatedTask.getStatus());
             return ResponseEntity.ok(taskService.updateTask(existingTask));
         }
         return ResponseEntity.status(403).build();
     }
 
-    @DeleteMapping("/{id}")
+    // DLETE FOR ADMIN
+    @Secured("ROLE_ADMIN")
+    @DeleteMapping("/admin/tasks/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
         Task task = taskService.findTaskById(id);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-
-        if (task != null && (task.getUserId().getUsername().equals(username) || isAdmin(authentication))) {
+        if (task != null) {
             taskService.deleteTask(id);
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.status(403).build();
+        return ResponseEntity.status(404).build();
     }
 
     private boolean isAdmin(Authentication authentication) {
